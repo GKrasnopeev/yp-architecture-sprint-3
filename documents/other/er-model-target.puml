@@ -1,0 +1,140 @@
+@startuml
+
+entity "User" as user {
+    id: UUID [PK]
+    email: String
+    password_hash: String
+    name: String
+    is_active: Boolean
+    created_at: DateTime
+}
+entity "Role" as role {
+    id: UUID [PK]
+    name: String
+    description: String
+    is_active: Boolean
+    created_at: DateTime
+}
+entity "UserRole" as user_role {
+    user_id: UUID [PK]
+    role_id: UUID [PK]
+    is_active: boolean
+    created_at: DateTime
+}
+
+entity "House" as house {
+    id: UUID [PK]
+    user_role_id: UUID [FK]
+    name: String
+    address: String
+    is_active: Boolean
+    created_at: DateTime
+}
+entity "ModuleType" as module_type {
+    id: UUID [PK]
+    name: String
+    description: String
+    is_active: Boolean
+    created_at: DateTime
+}
+entity "Module" as module {
+    id: UUID [PK]
+    module_type_id: UUID [FK]
+    house_id: UUID [FK]
+    serial_number: String
+    status: String
+    last_update: DateTime
+    description: String
+    is_active: Boolean
+    created_at: DateTime
+}
+entity "MonitoringProgram" as monitoring_program {
+    id: UUID [PK]
+    device_id: String
+    name: String
+    value: String
+    valueType: String
+    created_at: DateTime
+}
+entity "Record" as record {
+    id: UUID [PK]
+    module_id: UUID [FK]
+    storage_bucket_id: String
+    created_at: DateTime
+}
+entity "DeviceType" as device_type {
+    id: UUID [PK]
+    name: String
+    description: String
+    is_active: Boolean
+    created_at: DateTime
+}
+entity "Command" as command{
+    id: UUID [PK]
+    name: String
+    description: String
+    is_active: Boolean
+    created_at: DateTime
+}
+entity "ModuleCommand" as module_command{
+    id: UUID [PK]
+    module_id: UUID [FK]
+    command_id: UUID [FK]
+    status: String
+    execution_at: DateTime
+    is_active: Boolean
+    created_at: DateTime
+
+}
+entity "DeviceOperation" as device_operation{
+    id: UUID [PK]
+    module_id: UUID [FK]
+    device_id: UUID [FK]
+    status: String
+    execution_at: DateTime
+    is_active: Boolean
+    created_at: DateTime
+}
+entity "Device" as device {
+    id: UUID [PK]
+    device_type_id: UUID [FK]
+    serial_number: String
+    status: Boolean
+    last_update: DateTime
+    description: String
+    is_active: Boolean
+    created_at: DateTime
+}
+entity "Telemetry" as telemetry{
+    id: UUID [PK]
+    device_id: UUID [FK]
+    data: String
+    created_at: DateTime
+}
+entity "Notification" as notification{
+    id: UUID [PK]
+    message: String
+    user_id: UUID [FK]
+    status:String
+    created_at: DateTime
+    sent_at: DateTime
+    is_active: Boolean
+}
+' Определение связей между сущностями
+user ||--o{ user_role: "Имеет"
+role ||--o{ user_role: "Относится"
+user_role ||--o{ house: "Владеет"
+house ||--o{ module: "Содержит"
+module_type ||--o{ module: "Имеет тип"
+module ||--o{ module_command: "Выполняет"
+command ||--o{ module_command: "Относится"
+module ||--o{ device: "Управляет"
+device_type ||--o{ device: "Имеет тип"
+record ||--o{ module: "Относится"
+device ||--o{ device_operation: "Выполняет"
+module ||--o{ device_operation: "Передает"
+device ||--o{ monitoring_program: "Соблюдает"
+device ||--o{ telemetry: "Генерирует"
+user ||--o{ notification: "Получает"
+
+@enduml

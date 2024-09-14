@@ -1,0 +1,22 @@
+@startuml
+title Sequence Diagram for Device Control
+
+actor User
+participant DeviceControlAPI
+participant DeviceCommandHandler
+participant DeviceStateManager
+participant DeviceControlDB
+
+User -> DeviceControlAPI: sendCommand(deviceId, command)
+DeviceControlAPI -> DeviceCommandHandler: handleCommand(command)
+DeviceCommandHandler -> DeviceStateManager: getState(deviceId)
+DeviceStateManager -> DeviceControlDB: queryDeviceState(deviceId)
+DeviceControlDB --> DeviceStateManager: return deviceState
+DeviceStateManager -> DeviceCommandHandler: return currentState
+DeviceCommandHandler -> DeviceStateManager: updateState(deviceId, newState)
+DeviceStateManager -> DeviceControlDB: updateDeviceState(deviceId, newState)
+DeviceControlDB --> DeviceStateManager: acknowledge update
+DeviceStateManager --> DeviceCommandHandler: acknowledge update
+DeviceCommandHandler --> DeviceControlAPI: acknowledge update
+DeviceControlAPI --> User: return success
+@enduml

@@ -1,0 +1,25 @@
+@startuml
+title Notification Service - Class Diagram
+
+class NotificationAPI {
+    +sendNotification(userId: String, message: String): Response
+}
+
+class NotificationManager {
+    +createNotification(userId: String, message: String): Notification
+    +send(notification: Notification): Boolean
+}
+
+class NotificationEventListener {
+    +onEvent(event: NotificationEvent): void
+}
+
+class NotificationDB {
+    +saveNotification(notification: Notification): void
+    +getNotifications(userId: String): List<Notification>
+}
+
+NotificationAPI --> NotificationManager : calls
+NotificationManager --> NotificationDB : stores
+NotificationEventListener --> NotificationManager : triggers
+@enduml

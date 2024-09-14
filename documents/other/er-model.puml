@@ -1,0 +1,56 @@
+@startuml
+
+title Entity Diagram
+entity DeviceAction {
+    * id - Уникальный идентификатор [PK]
+    * name - Наименование действия
+}
+entity User {
+    * id - Уникальный идентификатор [PK]
+    * login - Логин
+    * password - Пароль в виде хэш-суммы
+    * active_token - JWT Токен
+}
+entity Device {
+    * id - Уникальный идентификатор [PK]
+    * type_id - Тип устройства [FK]
+    * home_id - Прикрепленный дом [FK]
+    * serial - Серийный номер
+    * modelName - Наименование модели
+    * device_action_id - Команда устройству [FK]
+}
+entity Home {
+    * id - Уникальный идентификатор [PK]
+    * name - Наименование дома
+    * user_id - Идентификатор владельца
+    * address - Адрес
+}
+entity "DeviceType" {
+    * id - Уникальный идентификатор [PK]
+    * name - Наименование типа
+    * manufactory - Производитель
+}
+entity DeviceData {
+    * id - Уникальный идентификатор [PK]
+    * device_id - Устройство [FK]
+    * value_name - Наименование параметра
+    * value - Значение параметра
+    * created_at - Дата создания
+    * updated_at - Дата обновления
+    * default - Значение по умолчанию
+}
+entity TelemetryData {
+    * id - Уникальный идентификатор [PK]
+    * device_id - Устройство [FK]
+    * value_name - Наименование параметра
+    * value - Значение параметра
+    * datetime - Временная метка
+}
+Home }o--|| User
+Device }o--|| Home
+Device ||--|| "DeviceType"
+"DeviceData" }o--|| Device
+"Device" }o--|| DeviceAction
+"Device" }o--|| TelemetryData
+
+@enduml
