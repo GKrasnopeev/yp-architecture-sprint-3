@@ -1,0 +1,57 @@
+@startuml
+class User {
+  +id: Integer
+  +name: String
+  +email: String
+  +password: String
+  +registerHouse(house: House): void
+  +manageDevices(): void
+}
+
+class House {
+  +id: Integer
+  +address: String
+  +owner_id: Integer
+  +devices: List<Device>
+  +addDevice(device: Device): void
+}
+
+class Device {
+  +id: Integer
+  +serial_number: String
+  +status: String
+  +type_id: Integer
+  +house_id: Integer
+  +changeStatus(newStatus: String): void
+  +sendTelemetry(telemetry: TelemetryData): void
+}
+
+class DeviceType {
+  +id: Integer
+  +name: String
+  +description: String
+}
+
+class Module {
+  +id: Integer
+  +module_name: String
+  +module_status: String
+  +interactWithDevice(device: Device): void
+}
+
+class TelemetryData {
+  +id: Integer
+  +device_id: Integer
+  +timestamp: Date
+  +temperature: Float
+  +light_level: Integer
+}
+
+' Relations between classes
+User "1" -- "0..*" House : "owns"
+House "1" -- "0..*" Device : "has"
+Device "1" -- "1" DeviceType : "type"
+Device "1" -- "0..*" TelemetryData : "generates"
+Module "1" -- "0..*" Device : "interacts with"
+
+@enduml

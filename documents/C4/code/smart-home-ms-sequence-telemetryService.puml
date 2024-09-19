@@ -1,0 +1,15 @@
+@startuml
+title Sequence Diagram for Telemetry Processing
+
+actor User
+participant "Device" as device
+participant "Telemetry Service" as telemetryService
+participant "Telemetry DB" as telemetryDB
+
+User -> device : "Request telemetry data"
+device -> telemetryService : "Send telemetry data"
+telemetryService -> telemetryDB : "Save telemetry data"
+telemetryDB --> telemetryService : "Data saved"
+telemetryService --> device : "Confirm data reception"
+device --> User : "Telemetry data sent"
+@enduml

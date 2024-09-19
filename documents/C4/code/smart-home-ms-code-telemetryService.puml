@@ -1,0 +1,24 @@
+@startuml
+title Telemetry Service - Class Diagram
+
+class TelemetryAPI {
+    +getTelemetry(deviceId: String): TelemetryData
+}
+
+class TelemetryProcessor {
+    +processTelemetry(deviceId: String, data: TelemetryData): void
+}
+
+class TelemetryEventListener {
+    +onTelemetryEvent(event: TelemetryEvent): void
+}
+
+class TelemetryDB {
+    +saveTelemetry(deviceId: String, data: TelemetryData): void
+    +getTelemetry(deviceId: String): TelemetryData
+}
+
+TelemetryAPI --> TelemetryProcessor : calls
+TelemetryProcessor --> TelemetryDB : saves
+TelemetryEventListener --> TelemetryProcessor : triggers
+@enduml

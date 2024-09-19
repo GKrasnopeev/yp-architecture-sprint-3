@@ -1,0 +1,133 @@
+@startuml
+!include ../template/C4_Component.puml
+
+title Smart-home System Component Diagram (Detailed)
+
+' Территория пользователя
+Boundary(userHome, "Дом пользователя") {
+    Boundary(sensorSystem, "Датчики умного дома"){
+        System_Ext(sensorTemperature, "Датчики температуры", "Передают данные о температуре в доме", $type="IoT")
+        System_Ext(sensorLight, "Датчики света", "Передают данные об уровне освещения", $type="IoT")
+        System_Ext(sensorGate, "Датчики управления воротами", "Передают данные о текущем состоянии ворот", $type="IoT")
+        System_Ext(sensorRecord, "Камеры видеонаблюдения", "Передают видеоматериалы о происходящем в доме", $type="IoT")
+    }
+    System_Ext(sensorControl, "Модуль управления умным домом", "Управляет и анализирует данные о компонентах умного дома")
+    Person_Ext(user, "Пользователь", "Управляет устройствами и просматривает данные умного дома")
+}
+Person(admin, "Администратор", "Администрирует систему")
+System_Boundary(smartHome, "Целевая система smart-home"){
+    ' Front-end приложения
+    Boundary(frontEnd, "Приложение smart-home"){
+        Container(webPage, "Web-application", "React", "Веб-приложение системы")
+        Container(mobileApp, "Mobile-application", "Xamarin", "Мобильное веб-приложение")
+    }
+
+    ' API Gateway
+    Container(apiGateWay, "API Gateway", "Kong", "Роутинг всех запросов между внешними пользователями и микросервисами")
+    ' Брокер очередей
+    ContainerQueue(kafka, "Брокер очередей", "Kafka","Брокер сообщений для всех ассинхронных взаимодействий")
+    ' Object Storage для хранения видеоматериалов
+    Container(objectStorage, "Object Storage", "Minio S3", "Хранение видеоматериалов и данных о событиях")
+    ' Boundary для микросервиса управления устройствами
+    Container_Boundary(deviceControlService, "Device Control Service") {
+        Component(deviceAPI, "Device Control API", "REST API", "Управление запросами от пользователя")
+        Component(deviceCommandHandler, "Device Command Handler", "Python", "Обработка команд управления устройствами")
+        Component(deviceStateManager, "Device State Manager", "Python", "Управление состоянием устройства")
+        Component(deviceEventListener, "Device Event Listener", "Python", "Обрабатывает/отправляет события")
+    }
+    ContainerDb(deviceControlDB, "Device Control DB", "PostgreSQL", "Хранит данные об устройствах")
+    ' Boundary для микросервиса управления пользователями
+    Container_Boundary(userManagementService, "User Management Service") {
+        Component(userAPI, "User Management API", "REST API", "Управление пользователями")
+        Component(userManager, "User Manager", "Python", "Менеджер данных пользователей")
+    }
+    ContainerDb(userDB, "User DB", "MongoDB", "Хранит данные пользователей")
+    ' Boundary для микросервиса телеметрии
+    Container_Boundary(telemetryService, "Telemetry Service") {
+        Component(telemetryAPI, "Telemetry API", "REST API", "Запрос телеметрии с устройств")
+        Component(telemetryProcessor, "Telemetry Processor", "Python", "Обработка данных телеметрии")
+        Component(telemetryEventListener, "Telemetry Event Listener", "Python", "Обрабатывает/отправляет события")
+    }
+    ContainerDb(telemetryDB, "Telemetry DB", "MongoDB", "Хранение данных телеметрии")
+    ' Boundary для микросервиса мониторинга
+    Container_Boundary(monitoringService, "Monitoring Service") {
+        Component(monitoringAPI, "Monitoring API", "REST API", "Запрос состояния устройств")
+        Component(monitoringProcessor, "Monitoring Processor", "Python", "Обработка данных мониторинга")
+        Component(monitoringEventListener, "Monitoring Event Listener", "Python", "Обрабатывает/отправляет события")
+    }
+    ContainerDb(monitoringDB, "Monitoring DB", "PostgreSQL", "Хранение данных мониторинга")
+    ' Boundary для микросервиса регистрации устройств
+    Container_Boundary(deviceRegisterService, "Device Register Service") {
+        Component(deviceRegisterAPI, "Device Register API", "REST API", "Регистрация устройств умного дома")
+        Component(deviceRegistrationManager, "Registration Manager", "Python", "Менеджер регистрации устройств")
+    }
+    ContainerDb(deviceRegisterDB, "Device Register DB", "PostgreSQL", "Хранение данных о зарегистрированных устройствах")
+    ' Boundary для микросервиса нотификаций
+    Container_Boundary(notificationService, "Notification Service") {
+        Component(notificationAPI, "Notification API", "REST API", "Отправка уведомлений пользователям")
+        Component(notificationEventListener, "Notification Event Listener", "Python", "Обрабатывает/отправляет события")
+        Component(notificationManager, "Notification Manager", "Python", "Менеджер уведомлений")
+    }
+    ContainerDb(notificationDB, "Notification DB", "Redis", "Хранение данных уведомлений")
+    ' Аудит действий в системе
+    System_Boundary(elkStack, "ELK"){
+        Container(logstash, "Сбор логов", "Logstash", "Собирает и преобразовывает логи о действиях в системе")
+        ContainerDb(elasticSearch, "Хранение логов", "elasticSearch", "Хранит данные о действиях в системе")
+        Container(kibana, "Визуализация логов", "Kibana", "Визуализирует данные о действиях в системе")
+    }
+
+}
+' Взаимодействие устройств с модулем управления
+Rel(sensorTemperature, sensorControl, "Передача данных о состоянии/Прием команд")
+Rel(sensorLight, sensorControl, "Передача данных о состоянии/Прием команд")
+Rel(sensorGate, sensorControl, "Передача данных о состоянии/Прием команд")
+Rel(sensorRecord, sensorControl, "Передача данных о состоянии/Прием команд")
+' Взаимодействие модуля управления с системой
+BiRel_U(sensorControl, apiGateWay, "Передача/прием данных")
+Rel(apiGateWay, objectStorage, "Передача видеоматериалов")
+' Взаимодействие пользователя с системой
+Rel(user, webPage, "Взаимодействие с системой")
+Rel(user, mobileApp, "Взаимодействие с системой")
+' Взаимодействие frontend'а и backend'а
+BiRel(webPage, apiGateWay, "Запрос/Получение данных")
+BiRel(mobileApp, apiGateWay, "Запрос/Получение данных")
+'' Взаимодействие с API Gateway
+BiRel(apiGateWay, deviceAPI, "Запросы управления устройствами")
+BiRel(apiGateWay, deviceRegisterAPI, "Запросы регистрации устройств")
+BiRel(apiGateWay, monitoringAPI, "Запросы мониторинга устройств")
+BiRel(apiGateWay, telemetryAPI, "Запросы телеметрии устройств")
+BiRel(apiGateWay, notificationAPI, "Запросы уведомлений")
+BiRel(apiGateWay, userAPI, "Управление пользователями")
+' Взаимодействие с Object Storage
+BiRel(deviceAPI, objectStorage, "Загрузка и получение видеоматериалов")
+' Взаимодействие между компонентами микросервисов
+BiRel(deviceAPI, deviceCommandHandler, "Отправляет команды")
+BiRel(deviceCommandHandler, deviceStateManager, "Передает команды для управления состоянием")
+BiRel(deviceStateManager, deviceControlDB, "Чтение/Запись данных об устройствах")
+BiRel(deviceEventListener, deviceStateManager, "Получение/Отправка событий для обработки")
+BiRel(deviceRegisterAPI, deviceRegistrationManager, "Регистрация устройства")
+BiRel(deviceRegistrationManager, deviceRegisterDB, "Чтение/Запись данных о регистрации")
+BiRel(monitoringAPI, monitoringProcessor, "Запрос состояния устройств")
+BiRel(monitoringProcessor, monitoringDB, "Чтение/Запись данных мониторинга")
+BiRel(monitoringEventListener, monitoringProcessor, "Получение/Отправка событий для обработки")
+BiRel(telemetryAPI, telemetryProcessor, "Запрос телеметрии устройств")
+BiRel(telemetryProcessor, telemetryDB, "Чтение/Запись данных телеметрии")
+BiRel(telemetryEventListener, telemetryProcessor, "Получение/Отправка событий для обработки")
+BiRel(notificationAPI, notificationManager, "Получение/Отправка уведомлений")
+BiRel(notificationManager, notificationDB, "Чтение/Запись данных уведомлений")
+BiRel(notificationEventListener, notificationManager, "Получение/Отправка событий для обработки")
+BiRel(userAPI, userManager, "Управление данными пользователей")
+BiRel(userManager, userDB, "Чтение/Запись данных о пользователях")
+' Взаимодействие с Kafka
+BiRel(deviceEventListener, "kafka", "Получение/Отправка событий")
+BiRel(monitoringEventListener, "kafka", "Получение/Отправка событий")
+BiRel(telemetryEventListener, "kafka", "Получение/Отправка событий")
+BiRel(notificationEventListener, "kafka", "Получение/Отправка событий")
+BiRel(apiGateWay, "kafka", "Получение/Отправка событий")
+' Работа аудита
+Rel(logstash, elasticSearch, "Запись данных о действиях")
+Rel(elasticSearch, kibana, "Чтение данных о действиях")
+Rel(kibana, admin, "Уведомление администратора об инцидентах")
+BiRel(admin, smartHome, "Администрирование системы")
+
+@enduml

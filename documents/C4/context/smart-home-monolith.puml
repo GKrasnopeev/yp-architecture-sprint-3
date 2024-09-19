@@ -1,0 +1,32 @@
+@startuml
+!include ../template/C4_Context.puml
+!define DEVICONS https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons
+!define FONTAWESOME https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/font-awesome-5
+!include DEVICONS/java.puml
+!include DEVICONS/postgresql.puml
+
+!include FONTAWESOME/users.puml
+
+title Smart-home-monolith Context Diagram
+
+top to bottom direction
+
+Boundary(userHome, "Дом пользователя"){
+    System_Ext(sensorSystem, "Датчики температуры", "Передает данные о температуре",  $type="IoT")
+    Person_Ext(user, "Пользователь", "ёМожет управлять отоплением и просматривать данные температуры")
+}
+' Пользователь
+
+Person(admin, "Специалист", "Администрирует систему, подключает датчики температуры")
+
+' Система
+System(smartHomeMonolith, "Приложение smart-home","Монолитное приложение по управлению датчиками отопления у пользователей", $type="Java", $sprite="java")
+
+' Взаимодействие пользователя с системами
+BiRel(user, smartHomeMonolith, "Просмотр и управление температурой")
+
+' Взаимодействие специалиста с системой и датчиками
+BiRel(admin, smartHomeMonolith, "Администрирует систему")
+' Взаимодействие системы с датчиками
+BiRel(sensorSystem, smartHomeMonolith, "Мониторит данные от датчиков")
+@enduml

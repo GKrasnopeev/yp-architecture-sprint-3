@@ -1,0 +1,30 @@
+@startuml
+title Device Control Service - Class Diagram
+
+class DeviceControlAPI {
+    +sendCommand(deviceId: String, command: Command): Response
+}
+
+class DeviceCommandHandler {
+    +handleCommand(command: Command): Boolean
+}
+
+class DeviceStateManager {
+    +getState(deviceId: String): DeviceState
+    +updateState(deviceId: String, newState: DeviceState): void
+}
+
+class DeviceEventListener {
+    +onEvent(event: DeviceEvent): void
+}
+
+class DeviceControlDB {
+    +getDevice(deviceId: String): Device
+    +updateDeviceState(deviceId: String, newState: DeviceState): void
+}
+
+DeviceControlAPI --> DeviceCommandHandler : calls
+DeviceCommandHandler --> DeviceStateManager : calls
+DeviceStateManager --> DeviceControlDB : updates
+DeviceEventListener --> DeviceStateManager : updates
+@enduml

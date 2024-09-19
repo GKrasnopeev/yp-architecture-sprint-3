@@ -1,0 +1,107 @@
+@startuml
+!include ../template/C4_Container.puml
+!define DEVICONS https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons
+!define FONTAWESOME https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/font-awesome-5
+
+
+' Подключение спрайтов
+!include DEVICONS/python.puml
+!include DEVICONS/postgresql.puml
+!include FONTAWESOME/users.puml
+
+title Smart-home-ms Container Diagram
+
+top to bottom direction
+' Территория пользователя
+Boundary(userHome, "Дом пользователя") {
+    Boundary(sensorSystem, "Датчики умного дома"){
+        System_Ext(sensorTemperature, "Датчики температуры", "Передают данные о температуре в доме", $type="IoT")
+        System_Ext(sensorLight, "Датчики света", "Передают данные об уровне освещения", $type="IoT")
+        System_Ext(sensorGate, "Датчики управления воротами", "Передают данные о текущем состоянии ворот", $type="IoT")
+        System_Ext(sensorRecord, "Камеры видеонаблюдения", "Передают видеоматериалы о происходящем в доме", $type="IoT")
+    }
+    System_Ext(sensorControl, "Модуль управления умным домом", "Управляет и анализирует данные о компонентах умного дома")
+    Person_Ext(user, "Пользователь", "Управляет устройствами и просматривает данные умного дома")
+}
+Person(admin, "Администратор", "Администрирует систему")
+System_Boundary(smartHome, "Целевая система smart-home"){
+    Boundary(frontEnd, "Приложение smart-home"){
+        Container(webPage, "Web-application", "React", "Веб-приложение системы")
+        Container(mobileApp, "Mobile-application", "Xamarin", "Мобильное веб-приложение")
+    }
+    ' API Gateway
+    Container(apiGateWay, "Api GateWay", "Kong","HTTP(S) входная точка для всех запросов")
+    ' Брокер очередей
+    ContainerQueue(kafka, "Брокер очередей", "Kafka","Брокер сообщений для всех ассинхронных взаимодействий")
+    ' Object Storage для хранения видеоматериалов
+    Container(objectStorage, "Объектное хранилище", "Minio S3", "Объектное хранилище для видеоматериалов")
+    ' Микросервис управления устройствами
+    Container(deviceControlService, "Device Control Service", "Python", "Управляет устройствами умного дома (освещение, отопление, ворота и т.д.)", $sprite="python")
+    ContainerDb(deviceControlDB, "Device Control DB", "PostgreSQL", "Хранит изменения и настройки для всех устройств умного дома", $sprite="postgresql")
+    ' Микросервис регистрации устройств
+    Container(deviceRegisterService, "Device Register Service", "Python", "Регистрирует устройствами умного дома (освещение, отопление, ворота и т.д.)", $sprite="python")
+    ContainerDb(deviceRegisterDB, "Device Register DB", "PostgreSQL", "Хранит данные всех устройств умного дома", $sprite="postgresql")
+    ' Микросервис мониторинга
+    Container(monitoringService, "Monitoring Service", "Python", "Мониторинг состояния устройства в доме", $sprite="python")
+    ContainerDb(monitoringDB, "Monitoring DB", "PostgreSQL", "Хранит данные о мониторинге", $sprite="postgresql")
+    ' Микросервис телеметрии
+    Container(telemetryService, "Telemetry Service", "Python", "Собирает телеметрию со всех устройств умного дома", $sprite="python")
+    ContainerDb(telemetryDB, "Telemetry DB", "MongoDB", "Хранит данные телеметрии")
+    ' Микросервис нотификаций
+    Container(notificationService, "Notification Service", "Python", "Отправляет уведомления пользователям", $sprite="python")
+    ContainerDb(notificationDB, "Notification DB", "Redis", "Хранит данные уведомлений", $sprite="redis")
+    ' Микросервис управления пользователями
+    Container(userManagementService, "User Management Service", "Python", "Управляет данными пользователей", $sprite="python")
+    ContainerDb(userDB, "User DB", "MongoDB", "Хранит данные пользователей", $sprite="mongodb")
+    ' Аудит действий в системе
+    System_Boundary(elkStack, "ELK"){
+        Container(logstash, "Сбор логов", "Logstash", "Собирает и преобразовывает логи о действиях в системе")
+        ContainerDb(elasticSearch, "Хранение логов", "elasticSearch", "Хранит данные о действиях в системе")
+        Container(kibana, "Визуализация логов", "Kibana", "Визуализирует данные о действиях в системе")
+    }
+}
+' Взаимодействие устройств с модулем управления
+Rel(sensorTemperature, sensorControl, "Передача данных о состоянии/Прием команд")
+Rel(sensorLight, sensorControl, "Передача данных о состоянии/Прием команд")
+Rel(sensorGate, sensorControl, "Передача данных о состоянии/Прием команд")
+Rel(sensorRecord, sensorControl, "Передача данных о состоянии/Прием команд")
+' Взаимодействие модуля управления с системой
+BiRel_U(sensorControl, apiGateWay, "Передача/прием данных")
+Rel(apiGateWay, objectStorage, "Передача видеоматериалов")
+' Взаимодействие пользователя с системой
+Rel(user, webPage, "Взаимодействие с системой")
+Rel(user, mobileApp, "Взаимодействие с системой")
+' Взаимодействие frontend'а и backend'а
+BiRel(webPage, apiGateWay, "Запрос/Получение данных")
+BiRel(mobileApp, apiGateWay, "Запрос/Получение данных")
+Rel(apiGateWay, deviceControlService, "Управлять устройством")
+Rel(apiGateWay, deviceRegisterService, "Зарегистрировать устройство")
+Rel(apiGateWay, monitoringService, "Проверить состояние устройством")
+Rel(apiGateWay, telemetryService, "Снять телеметрию с устройства")
+Rel(apiGateWay, userManagementService, "Управлять профилем")
+
+' Взаимодействие микросервисов с БД
+BiRel(deviceControlService, deviceControlDB, "Чтение/запись данных об управлении устройством")
+Rel(deviceControlService, objectStorage, "Запрос видеоматериалов")
+BiRel_U(deviceRegisterService, deviceRegisterDB, "Чтение/запись данных о регистрации устройства")
+BiRel_U(monitoringService, monitoringDB, "Чтение/запись данных о текущем состоянии устройства")
+BiRel_U(telemetryService, telemetryDB, "Чтение/запись данных о телеметрии")
+BiRel_U(userManagementService, userDB, "Чтение/запись данных о пользователях")
+BiRel_U(notificationService, notificationDB, "Чтение/запись данных о уведомлениях")
+
+' Взаимодействие с брокером сообщений
+BiRel(notificationService, kafka, "Публикация/Чтение состояния")
+BiRel(telemetryService, kafka,"Публикация/Чтение состояния")
+BiRel(deviceControlService, kafka,"Запись/Чтение состояния")
+BiRel(monitoringService, kafka,"Запись/Чтение состояния")
+BiRel(deviceRegisterDB, kafka,"Публикация/Чтение состояния")
+BiRel(apiGateWay, kafka, "Публикация/Чтение состояния")
+Rel(kafka, logstash, "Обработка события")
+
+' Работа аудита
+Rel(logstash, elasticSearch, "Запись данных о действиях")
+Rel(elasticSearch, kibana, "Чтение данных о действиях")
+BiRel(kibana, admin, "Уведомление администратора об инцидентах")
+Rel(admin, smartHome, "Администрирование системы")
+
+@enduml

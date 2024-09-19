@@ -1,0 +1,15 @@
+@startuml
+title Sequence Diagram for Notification Sending
+
+actor User
+participant NotificationAPI
+participant NotificationManager
+participant NotificationDB
+
+User -> NotificationAPI: sendNotification(userId, message)
+NotificationAPI -> NotificationManager: createNotification(userId, message)
+NotificationManager -> NotificationDB: saveNotification(notification)
+NotificationDB --> NotificationManager: acknowledge save
+NotificationManager -> NotificationAPI: notificationSent
+NotificationAPI --> User: return success
+@enduml
