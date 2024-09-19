@@ -48,7 +48,7 @@ entity TelemetryData {
 }
 Home }o--|| User
 Device }o--|| Home
-Device ||--|| "DeviceType"
+Device }o--|| "DeviceType"
 "DeviceData" }o--|| Device
 "Device" }o--|| DeviceAction
 "Device" }o--|| TelemetryData

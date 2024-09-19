@@ -183,7 +183,7 @@ services:
       - ./documents:/spec
     environment:
       - CORS=true
-      - SWAGGER_JSON=/other/swagger.yaml
+      - SWAGGER_JSON=/spec/other/swagger.yaml
 
 volumes:
   ssd_storage:

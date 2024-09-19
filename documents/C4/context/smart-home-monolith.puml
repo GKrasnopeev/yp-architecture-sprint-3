@@ -19,42 +19,14 @@ Boundary(userHome, "Дом пользователя"){
 
 Person(admin, "Специалист", "Администрирует систему, подключает датчики температуры")
 
-System_Boundary(smartHomeMonolith, "Монолит smart-home") {
-    ' Домен Управления устройствами
-    Boundary(deviceControlDomain, "Домен Управления устройствами") {
-        System(deviceControlSystem, "Система управления устройствами", "Управляет устройствами отопления", $type="Java", $sprite="java")
-    }
-
-    ' Домен Мониторинга температуры
-    Boundary(temperatureMonitoringDomain, "Домен Мониторинга температуры") {
-        System(temperatureMonitoringSystem, "Система мониторинга температуры", "Мониторит и отображает температуру", $type="Java", $sprite="java")
-
-    }
-
-    ' Домен Управления пользователями
-    Boundary(userManagementDomain, "Домен Управления пользователями") {
-        System(userManagementSystem, "Система управления пользователями", "Управляет данными пользователей", $type="Java", $sprite="java")
-    }
-
-    ' Общая база данных для всех доменов
-    SystemDb(commonDB, "База данных", "Хранит данные об устройствах, пользователях и температуре", $type="PostgreSQL", $sprite="postgresql")
-}
-
+' Система
+System(smartHomeMonolith, "Приложение smart-home","Монолитное приложение по управлению датчиками отопления у пользователей", $type="Java", $sprite="java")
 
 ' Взаимодействие пользователя с системами
-Rel(user, deviceControlSystem, "Управление устройствами")
-Rel(user, temperatureMonitoringSystem, "Просмотр температуры")
+BiRel(user, smartHomeMonolith, "Просмотр и управление температурой")
 
 ' Взаимодействие специалиста с системой и датчиками
-Rel(admin, smartHomeMonolith, "Добавляет пользователей")
-Rel(admin, smartHomeMonolith, "Администрирует систему")
-Rel(admin, sensorSystem, "Регистрирует/устанавливает датчики")
+BiRel(admin, smartHomeMonolith, "Администрирует систему")
 ' Взаимодействие системы с датчиками
-Rel(deviceControlSystem, sensorSystem, "Получает данные о температуре")
-Rel(sensorSystem, temperatureMonitoringSystem, "Мониторит данные от датчиков")
-
-' Работа систем с общей базой данных
-Rel(deviceControlSystem, commonDB, "Чтение/Запись данных об устройствах")
-Rel(temperatureMonitoringSystem, commonDB, "Чтение данных о температуре")
-Rel(userManagementSystem, commonDB, "Чтение/Запись данных пользователей")
+BiRel(sensorSystem, smartHomeMonolith, "Мониторит данные от датчиков")
 @enduml
